@@ -1,0 +1,69 @@
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <title>System Monitoring</title>
+    <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+    <script
+      src='https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.1/socket.io.js'
+    ></script>
+    <style>
+      body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin:
+      0; padding: 0; display: flex; justify-content: center; align-items:
+      center; height: 100vh; } .container { text-align: center;
+      background-color: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 0
+      10px rgba(0, 0, 0, 0.1); max-width: 800px; width: 100%; } h1, h2 {
+      margin-bottom: 20px; color: #333; } .alert { padding: 10px;
+      background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;
+      border-radius: 4px; margin-bottom: 20px; display: none; /* Initially hide
+      the alert */ } .red-alert { color: red; display: block; /* Show the alert
+      */ } .gauge-container { display: flex; justify-content: space-around;
+      margin-top: 20px; max-height: 300px;min-height: 300px; overflow: auto; }
+      .gauge { width: 45%; padding: 20px; background-color: #f5f5f5;
+      border-radius: 8px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); } .gauge-title
+      { font-size: 20px; margin-bottom: 10px; color: #555; }
+    </style>
+  </head>
+  <body>
+    <div class='container'>
+      <h1>System Monitoring</h1>
+      <h2>Suman Manna</h2>
+      <div class='alert' id='cpu-alert'>High CPU Utilization!</div>
+      <div class='alert' id='mem-alert'>High Memory Utilization!</div>
+      <div class='gauge-container'>
+        <div class='gauge' id='cpu-gauge'>
+          <div class='gauge-title'>CPU Utilization</div>
+        </div>
+        <div class='gauge' id='mem-gauge'>
+          <div class='gauge-title'>Memory Utilization</div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const socket = io("/system"); const cpuAlert =
+      document.getElementById('cpu-alert'); const memAlert =
+      document.getElementById('mem-alert'); socket.on('metrics', function(data)
+      { console.log('Received socket data:', data); const cpuGauge = { type:
+      "indicator", mode: "gauge+number", value: data.cpuMetric, gauge: { axis: {
+      range: [null, 100] }, bar: { color: "#1f77b4" }, bgcolor: "white",
+      borderwidth: 2, bordercolor: "#ccc", steps: [ { range: [0, 50], color:
+      "#d9f0a3" }, { range: [50, 85], color: "#ffeb84" }, { range: [85, 100],
+      color: "#ff5f5f" } ], threshold: { line: { color: "red", width: 4 },
+      thickness: 0.75, value: data.cpuMetric } } }; const memGauge = { type:
+      "indicator", mode: "gauge+number", value: data.memMetric, gauge: { axis: {
+      range: [null, 100] }, bar: { color: "#1f77b4" }, bgcolor: "white",
+      borderwidth: 2, bordercolor: "#ccc", steps: [ { range: [0, 50], color:
+      "#d9f0a3" }, { range: [50, 85], color: "#ffeb84" }, { range: [85, 100],
+      color: "#ff5f5f" } ], threshold: { line: { color: "red", width: 4 },
+      thickness: 0.75, value: data.memMetric } } }; const cpuGaugeLayout = {
+      margin: { t: 0, r: 0, l: 0, b: 0 } }; const memGaugeLayout = { margin: {
+      t: 0, r: 0, l: 0, b: 0 } }; Plotly.newPlot('cpu-gauge', [cpuGauge],
+      cpuGaugeLayout); Plotly.newPlot('mem-gauge', [memGauge], memGaugeLayout);
+      if (data.cpuMetric > 85) { cpuAlert.classList.add('red-alert'); } else
+      if(data.memMetric > 90){ memAlert.classList.add('red-alert'); }else {
+      cpuAlert.classList.remove('red-alert');
+      memAlert.classList.remove('red-alert') } })
+
+    </script>
+  </body>
+</html>
