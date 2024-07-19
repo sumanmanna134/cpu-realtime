@@ -1,27 +1,23 @@
-FROM node:22-alpine3.18 AS builder
+# Use the official Node.js image as a base image
+FROM node:18-alpine
 
-USER node
+# Set the working directory
+WORKDIR /usr/src/app
 
-RUN mkdir -p /home/node/app
+# Copy package.json and package-lock.json files to the working directory
+COPY package*.json ./
 
-WORKDIR /home/node/app
+# Install dependencies
+RUN npm install
 
-COPY --chown=node . .
-# Building the production-ready application code - alias to 'nest build'
-RUN yarn install --frozen-lockfile --production
+# Copy the rest of the application code to the working directory
+COPY . .
 
-FROM node:22-alpine3.18
+# Build the NestJS application
+RUN npm run build
 
-USER node
-
-WORKDIR /home/node/app
-
-COPY --from=builder --chown=node /home/node/app/node_modules ./node_modules
-# Copying the production-ready application code, so it's one of few required artifacts
-COPY --from=builder --chown=node /home/node/app/dist ./dist
-COPY --from=builder --chown=node /home/node/app/views ./views
-COPY --from=builder --chown=node /home/node/app/package.json .
-
+# Expose the port that the app runs on
 EXPOSE 3000
 
-CMD [ "yarn", "start" ]
+# Command to run the application
+CMD ["npm", "run", "start:prod"]

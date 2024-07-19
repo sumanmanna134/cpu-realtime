@@ -3,6 +3,10 @@ import { ICpuUsage } from '../common/cpu.usage.interface';
 import * as os from 'os';
 import { ITotalUsedMemory } from '../common/used.memeory.interface';
 import { ICpuUsageMetric } from '../common/metric.cpu.interface';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import * as fs from 'fs/promises';
+const execPromise = promisify(exec);
 @Injectable()
 export class CpuService {
   getCpuMetric(): number {
@@ -59,5 +63,27 @@ export class CpuService {
   }
   bytesToGB(bytes: number): number {
     return bytes / Math.pow(1024, 3);
+  }
+
+  async runSystemCommand(command: string) {
+    try {
+      const { stdout, stderr } = await execPromise(command);
+      if (stderr) {
+        throw new Error(stderr);
+      }
+      await fs.appendFile('output.log', stdout + '\n');
+      return stdout;
+    } catch (error) {
+      // Handle any errors that occurred during execution
+      return { error: error };
+    }
+  }
+  async readLogFile(): Promise<any | { error: string }> {
+    try {
+      const logContent = await fs.readFile('output.log', 'utf8');
+      return logContent;
+    } catch (error) {
+      return { error: error.message };
+    }
   }
 }
